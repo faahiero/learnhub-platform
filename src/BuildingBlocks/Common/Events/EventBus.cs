@@ -79,12 +79,20 @@ public class RabbitMqEventBus : IEventBus, IDisposable
         consumer.Received += async (_, ea) =>
         {
             var message = Encoding.UTF8.GetString(ea.Body.ToArray());
-            var @event = JsonSerializer.Deserialize<T>(message);
-            if (@event != null)
+            try
             {
-                await handler(@event);
+                var @event = JsonSerializer.Deserialize<T>(message);
+                if (@event != null)
+                {
+                    await handler(@event);
+                }
+                _channel.BasicAck(ea.DeliveryTag, false);
             }
-            _channel.BasicAck(ea.DeliveryTag, false);
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error processing event from queue. Message: {Message}", message);
+                _channel.BasicNack(ea.DeliveryTag, false, false);
+            }
         };
 
         _channel.BasicConsume(queueName, false, consumer);

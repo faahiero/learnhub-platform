@@ -102,7 +102,10 @@ public class CoursesController : ControllerBase
     public async Task<ActionResult<CourseResponse>> UpdateCourse(Guid id, [FromBody] UpdateCourseRequest request)
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        var course = await _context.Courses.FindAsync(id);
+        var course = await _context.Courses
+            .Include(c => c.Sections)
+                .ThenInclude(s => s.Lessons)
+            .FirstOrDefaultAsync(c => c.Id == id);
         if (course == null) return NotFound();
         if (course.InstructorId.ToString() != userId) return Forbid();
 
