@@ -18,7 +18,7 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    if (error.response?.status === 401 && !error.config?._skipAuthRedirect) {
       Cookies.remove('token');
       Cookies.remove('user');
       if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
@@ -67,7 +67,7 @@ export const enrollmentsAPI = {
   enroll: (data: { courseId: string; courseTitle: string }) =>
     api.post('/api/enrollments', data),
   getMyEnrollments: () => api.get('/api/enrollments/my-enrollments'),
-  getEnrollment: (courseId: string) => api.get(`/api/enrollments/${courseId}`),
+  getEnrollment: (courseId: string) => api.get(`/api/enrollments/${courseId}`, { _skipAuthRedirect: true } as Record<string, unknown>),
   updateProgress: (enrollmentId: string, data: { lessonId: string; isCompleted: boolean; watchedSeconds: number }) =>
     api.post(`/api/enrollments/${enrollmentId}/progress`, data),
   createReview: (data: { courseId: string; rating: number; comment?: string }) =>
