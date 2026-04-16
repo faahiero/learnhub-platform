@@ -17,25 +17,29 @@ export default function CourseDetailPage() {
   const [enrolling, setEnrolling] = useState(false);
   const [enrolled, setEnrolled] = useState(false);
   const [error, setError] = useState('');
+  const [enrollError, setEnrollError] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const courseRes = await coursesAPI.getById(id as string);
         setCourse(courseRes.data);
-        const reviewsRes = await enrollmentsAPI.getCourseReviews(id as string);
-        setReviews(reviewsRes.data);
-        if (user) {
-          try {
-            await enrollmentsAPI.getEnrollment(id as string);
-            setEnrolled(true);
-          } catch { /* not enrolled */ }
-        }
       } catch {
         setError('Course not found');
-      } finally {
         setLoading(false);
+        return;
       }
+      try {
+        const reviewsRes = await enrollmentsAPI.getCourseReviews(id as string);
+        setReviews(reviewsRes.data);
+      } catch { /* reviews unavailable */ }
+      if (user) {
+        try {
+          await enrollmentsAPI.getEnrollment(id as string);
+          setEnrolled(true);
+        } catch { /* not enrolled */ }
+      }
+      setLoading(false);
     };
     fetchData();
   }, [id, user]);
@@ -48,7 +52,7 @@ export default function CourseDetailPage() {
       setEnrolled(true);
     } catch (err: unknown) {
       const e = err as { response?: { data?: { message?: string } } };
-      setError(e.response?.data?.message || 'Failed to enroll');
+      setEnrollError(e.response?.data?.message || 'Failed to enroll');
     } finally {
       setEnrolling(false);
     }
@@ -111,6 +115,9 @@ export default function CourseDetailPage() {
                   className="w-full bg-indigo-600 text-white py-3 rounded-lg font-medium hover:bg-indigo-700 transition-colors disabled:opacity-50">
                   {enrolling ? 'Enrolling...' : 'Enroll Now'}
                 </button>
+              )}
+              {enrollError && (
+                <p className="mt-2 text-sm text-red-600">{enrollError}</p>
               )}
               <div className="mt-4 space-y-2 text-sm text-gray-600">
                 <div className="flex items-center gap-2"><BookOpen className="h-4 w-4" /> {totalLessons} lessons</div>
