@@ -15,7 +15,7 @@ public class MediaController : ControllerBase
     private readonly IEventBus _eventBus;
     private readonly ILogger<MediaController> _logger;
 
-    private static readonly HashSet<string> AllowedContentTypes = new()
+    private static readonly HashSet<string> AllowedContentTypes = new(StringComparer.OrdinalIgnoreCase)
     {
         "image/jpeg", "image/png", "image/gif", "image/webp",
         "video/mp4", "video/webm", "video/quicktime",

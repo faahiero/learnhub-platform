@@ -46,7 +46,8 @@ public class S3StorageService : IStorageService
 
     public async Task<(string url, string key)> UploadFileAsync(Stream fileStream, string fileName, string contentType)
     {
-        var key = $"{Guid.NewGuid()}/{fileName}";
+        var safeFileName = Uri.EscapeDataString(fileName);
+        var key = $"{Guid.NewGuid()}/{safeFileName}";
 
         var request = new PutObjectRequest
         {
