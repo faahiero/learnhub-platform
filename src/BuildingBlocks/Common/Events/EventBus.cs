@@ -18,6 +18,7 @@ public class RabbitMqEventBus : IEventBus, IDisposable
     private readonly IConnection _connection;
     private readonly IModel _channel;
     private readonly ILogger<RabbitMqEventBus> _logger;
+    private readonly object _publishLock = new();
     private const string ExchangeName = "learnhub_events";
 
     public RabbitMqEventBus(string hostName, ILogger<RabbitMqEventBus> logger)
@@ -52,11 +53,14 @@ public class RabbitMqEventBus : IEventBus, IDisposable
 
         if (_channel != null)
         {
-            _channel.BasicPublish(
-                exchange: ExchangeName,
-                routingKey: eventName,
-                basicProperties: null,
-                body: body);
+            lock (_publishLock)
+            {
+                _channel.BasicPublish(
+                    exchange: ExchangeName,
+                    routingKey: eventName,
+                    basicProperties: null,
+                    body: body);
+            }
             _logger.LogInformation("Published event {EventName}: {Message}", eventName, message);
         }
         else

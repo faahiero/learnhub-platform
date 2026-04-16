@@ -14,14 +14,14 @@ public class S3StorageService : IStorageService
 {
     private readonly IAmazonS3 _s3Client;
     private readonly string _bucketName;
-    private readonly string _serviceUrl;
+    private readonly string _publicServiceUrl;
     private readonly ILogger<S3StorageService> _logger;
 
     public S3StorageService(IAmazonS3 s3Client, IConfiguration configuration, ILogger<S3StorageService> logger)
     {
         _s3Client = s3Client;
         _bucketName = configuration["AWS:BucketName"] ?? "learnhub-media";
-        _serviceUrl = configuration["AWS:ServiceURL"] ?? "http://localstack:4566";
+        _publicServiceUrl = configuration["AWS:PublicServiceURL"] ?? "http://localhost:4566";
         _logger = logger;
 
         EnsureBucketExists().GetAwaiter().GetResult();
@@ -58,7 +58,7 @@ public class S3StorageService : IStorageService
 
         await _s3Client.PutObjectAsync(request);
 
-        var url = $"{_serviceUrl}/{_bucketName}/{key}";
+        var url = $"{_publicServiceUrl}/{_bucketName}/{key}";
         _logger.LogInformation("Uploaded file {FileName} to {Url}", fileName, url);
 
         return (url, key);
