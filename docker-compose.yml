@@ -118,8 +118,10 @@ services:
       - Jwt__Audience=LearnHub
       - RabbitMQ__Host=rabbitmq
     depends_on:
-      - localstack
-      - rabbitmq
+      localstack:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
 
   api-gateway:
     build:
