@@ -107,7 +107,7 @@ public class CoursesController : ControllerBase
                 .ThenInclude(s => s.Lessons)
             .FirstOrDefaultAsync(c => c.Id == id);
         if (course == null) return NotFound();
-        if (course.InstructorId.ToString() != userId) return Forbid();
+        if (!IsOwnerOrAdmin(course.InstructorId.ToString(), userId)) return Forbid();
 
         if (request.Title != null) course.Title = request.Title;
         if (request.Description != null) course.Description = request.Description;
@@ -130,7 +130,7 @@ public class CoursesController : ControllerBase
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         var course = await _context.Courses.FindAsync(id);
         if (course == null) return NotFound();
-        if (course.InstructorId.ToString() != userId) return Forbid();
+        if (!IsOwnerOrAdmin(course.InstructorId.ToString(), userId)) return Forbid();
 
         course.Status = "Published";
         course.UpdatedAt = DateTime.UtcNow;
@@ -153,7 +153,7 @@ public class CoursesController : ControllerBase
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         var course = await _context.Courses.FindAsync(id);
         if (course == null) return NotFound();
-        if (course.InstructorId.ToString() != userId) return Forbid();
+        if (!IsOwnerOrAdmin(course.InstructorId.ToString(), userId)) return Forbid();
 
         _context.Courses.Remove(course);
         await _context.SaveChangesAsync();
@@ -186,7 +186,7 @@ public class CoursesController : ControllerBase
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         var course = await _context.Courses.FindAsync(courseId);
         if (course == null) return NotFound();
-        if (course.InstructorId.ToString() != userId) return Forbid();
+        if (!IsOwnerOrAdmin(course.InstructorId.ToString(), userId)) return Forbid();
 
         var section = new Section
         {
@@ -216,7 +216,7 @@ public class CoursesController : ControllerBase
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         var course = await _context.Courses.FindAsync(courseId);
         if (course == null) return NotFound();
-        if (course.InstructorId.ToString() != userId) return Forbid();
+        if (!IsOwnerOrAdmin(course.InstructorId.ToString(), userId)) return Forbid();
 
         var section = await _context.Sections.FirstOrDefaultAsync(s => s.Id == sectionId && s.CourseId == courseId);
         if (section == null) return NotFound("Section not found");
@@ -260,6 +260,9 @@ public class CoursesController : ControllerBase
 
         return Ok(categories);
     }
+
+    private bool IsOwnerOrAdmin(string instructorId, string? userId) =>
+        User.IsInRole("Admin") || instructorId == userId;
 
     private static CourseResponse MapToResponse(CourseEntity course) => new()
     {
