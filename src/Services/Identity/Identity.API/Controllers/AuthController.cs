@@ -100,7 +100,7 @@ public class AuthController : ControllerBase
     [HttpGet("users")]
     public async Task<ActionResult<List<UserResponse>>> GetUsers()
     {
-        var users = await _context.Users.Select(u => MapToResponse(u)).ToListAsync();
+        var users = (await _context.Users.ToListAsync()).Select(MapToResponse).ToList();
         return Ok(users);
     }
 
