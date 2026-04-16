@@ -3,6 +3,7 @@ using System;
 using Enrollment.API.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Enrollment.API.Migrations
 {
     [DbContext(typeof(EnrollmentDbContext))]
-    partial class EnrollmentDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260416042445_AddTotalLessons")]
+    partial class AddTotalLessons
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

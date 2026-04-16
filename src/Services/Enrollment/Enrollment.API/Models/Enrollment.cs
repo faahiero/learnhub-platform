@@ -19,6 +19,8 @@ public class EnrollmentEntity
     [MaxLength(20)]
     public string Status { get; set; } = "Active"; // Active, Completed, Cancelled
 
+    public int TotalLessons { get; set; }
+
     public double ProgressPercent { get; set; }
 
     public DateTime EnrolledAt { get; set; } = DateTime.UtcNow;

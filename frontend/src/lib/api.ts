@@ -64,7 +64,7 @@ export const coursesAPI = {
 
 // Enrollments
 export const enrollmentsAPI = {
-  enroll: (data: { courseId: string; courseTitle: string }) =>
+  enroll: (data: { courseId: string; courseTitle: string; totalLessons: number }) =>
     api.post('/api/enrollments', data),
   getMyEnrollments: () => api.get('/api/enrollments/my-enrollments'),
   getEnrollment: (courseId: string) => api.get(`/api/enrollments/${courseId}`, { _skipAuthRedirect: true } as Record<string, unknown>),

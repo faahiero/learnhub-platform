@@ -41,7 +41,8 @@ public class EnrollmentsController : ControllerBase
         {
             UserId = userGuid,
             CourseId = request.CourseId,
-            CourseTitle = request.CourseTitle
+            CourseTitle = request.CourseTitle,
+            TotalLessons = request.TotalLessons
         };
 
         _context.Enrollments.Add(enrollment);
@@ -126,6 +127,19 @@ public class EnrollmentsController : ControllerBase
         progress.UpdatedAt = DateTime.UtcNow;
         if (request.IsCompleted && progress.CompletedAt == null)
             progress.CompletedAt = DateTime.UtcNow;
+
+        // Recalculate progress
+        if (enrollment.TotalLessons > 0)
+        {
+            var completedCount = enrollment.LessonProgresses.Count(lp => lp.IsCompleted);
+            enrollment.ProgressPercent = Math.Round((double)completedCount / enrollment.TotalLessons * 100, 1);
+
+            if (enrollment.ProgressPercent >= 100)
+            {
+                enrollment.Status = "Completed";
+                enrollment.CompletedAt ??= DateTime.UtcNow;
+            }
+        }
 
         enrollment.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();

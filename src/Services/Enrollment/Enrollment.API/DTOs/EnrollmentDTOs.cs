@@ -9,6 +9,8 @@ public class EnrollRequest
 
     [MaxLength(200)]
     public string CourseTitle { get; set; } = string.Empty;
+
+    public int TotalLessons { get; set; }
 }
 
 public class EnrollmentResponse

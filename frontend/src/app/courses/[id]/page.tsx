@@ -48,7 +48,8 @@ export default function CourseDetailPage() {
     if (!user) { router.push('/login'); return; }
     setEnrolling(true);
     try {
-      await enrollmentsAPI.enroll({ courseId: course!.id, courseTitle: course!.title });
+      const lessonCount = course!.sections?.reduce((acc, s) => acc + (s.lessons?.length || 0), 0) || 0;
+      await enrollmentsAPI.enroll({ courseId: course!.id, courseTitle: course!.title, totalLessons: lessonCount });
       setEnrolled(true);
     } catch (err: unknown) {
       const e = err as { response?: { data?: { message?: string } } };
