@@ -139,6 +139,11 @@ public class EnrollmentsController : ControllerBase
                 enrollment.Status = "Completed";
                 enrollment.CompletedAt ??= DateTime.UtcNow;
             }
+            else
+            {
+                enrollment.Status = "Active";
+                enrollment.CompletedAt = null;
+            }
         }
 
         enrollment.UpdatedAt = DateTime.UtcNow;
