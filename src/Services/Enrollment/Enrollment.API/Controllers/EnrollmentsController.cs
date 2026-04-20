@@ -37,12 +37,19 @@ public class EnrollmentsController : ControllerBase
         if (existing != null)
             return BadRequest(new { message = "Already enrolled in this course" });
 
+        // Validate TotalLessons: must be positive and capped at a reasonable maximum
+        var totalLessons = request.TotalLessons;
+        if (totalLessons <= 0)
+            return BadRequest(new { message = "TotalLessons must be greater than 0" });
+        if (totalLessons > 500)
+            return BadRequest(new { message = "TotalLessons exceeds maximum allowed (500)" });
+
         var enrollment = new EnrollmentEntity
         {
             UserId = userGuid,
             CourseId = request.CourseId,
             CourseTitle = request.CourseTitle,
-            TotalLessons = request.TotalLessons
+            TotalLessons = totalLessons
         };
 
         _context.Enrollments.Add(enrollment);
@@ -127,6 +134,8 @@ public class EnrollmentsController : ControllerBase
         progress.UpdatedAt = DateTime.UtcNow;
         if (request.IsCompleted && progress.CompletedAt == null)
             progress.CompletedAt = DateTime.UtcNow;
+        else if (!request.IsCompleted)
+            progress.CompletedAt = null;
 
         // Recalculate progress
         if (enrollment.TotalLessons > 0)
