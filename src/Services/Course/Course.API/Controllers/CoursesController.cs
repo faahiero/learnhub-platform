@@ -30,6 +30,9 @@ public class CoursesController : ControllerBase
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 12)
     {
+        if (page < 1) page = 1;
+        if (pageSize < 1) pageSize = 12;
+
         var query = _context.Courses
             .Where(c => c.Status == "Published")
             .AsQueryable();

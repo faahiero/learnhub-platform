@@ -141,7 +141,7 @@ public class EnrollmentsController : ControllerBase
         if (enrollment.TotalLessons > 0)
         {
             var completedCount = enrollment.LessonProgresses.Count(lp => lp.IsCompleted);
-            enrollment.ProgressPercent = Math.Round((double)completedCount / enrollment.TotalLessons * 100, 1);
+            enrollment.ProgressPercent = Math.Min(100, Math.Round((double)completedCount / enrollment.TotalLessons * 100, 1));
 
             if (enrollment.ProgressPercent >= 100)
             {
