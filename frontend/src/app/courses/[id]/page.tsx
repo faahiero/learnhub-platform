@@ -49,7 +49,7 @@ export default function CourseDetailPage() {
     setEnrolling(true);
     try {
       const lessonCount = course!.sections?.reduce((acc, s) => acc + (s.lessons?.length || 0), 0) || 0;
-      await enrollmentsAPI.enroll({ courseId: course!.id, courseTitle: course!.title, totalLessons: lessonCount });
+      await enrollmentsAPI.enroll({ courseId: course!.id, courseTitle: course!.title, totalLessons: Math.max(1, lessonCount) });
       setEnrolled(true);
     } catch (err: unknown) {
       const e = err as { response?: { data?: { message?: string } } };

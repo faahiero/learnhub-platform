@@ -37,10 +37,10 @@ public class EnrollmentsController : ControllerBase
         if (existing != null)
             return BadRequest(new { message = "Already enrolled in this course" });
 
-        // Validate TotalLessons: must be positive and capped at a reasonable maximum
+        // Validate TotalLessons: must be non-negative and capped at a reasonable maximum
         var totalLessons = request.TotalLessons;
-        if (totalLessons <= 0)
-            return BadRequest(new { message = "TotalLessons must be greater than 0" });
+        if (totalLessons < 0)
+            return BadRequest(new { message = "TotalLessons must not be negative" });
         if (totalLessons > 500)
             return BadRequest(new { message = "TotalLessons exceeds maximum allowed (500)" });
 

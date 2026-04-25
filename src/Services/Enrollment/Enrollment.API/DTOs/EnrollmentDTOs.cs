@@ -10,7 +10,7 @@ public class EnrollRequest
     [MaxLength(200)]
     public string CourseTitle { get; set; } = string.Empty;
 
-    [Range(1, 500)]
+    [Range(0, 500)]
     public int TotalLessons { get; set; }
 }
 
