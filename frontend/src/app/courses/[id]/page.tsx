@@ -21,6 +21,10 @@ export default function CourseDetailPage() {
 
   useEffect(() => {
     const fetchData = async () => {
+      setLoading(true);
+      setError('');
+      setEnrolled(false);
+      setEnrollError('');
       try {
         const courseRes = await coursesAPI.getById(id as string);
         setCourse(courseRes.data);
