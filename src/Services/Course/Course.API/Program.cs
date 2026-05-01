@@ -1,0 +1,89 @@
+using System.Text;
+using Common.Extensions;
+using Course.API.Data;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
+
+var builder = WebApplication.CreateBuilder(args);
+
+// Database
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? "Host=postgres;Database=learnhub_courses;Username=postgres;Password=postgres";
+builder.Services.AddDbContext<CourseDbContext>(options =>
+    options.UseNpgsql(connectionString));
+
+// JWT Authentication
+var jwtSecret = builder.Configuration["Jwt:Secret"] ?? "LearnHubSuperSecretKey2024!@#$%^&*()";
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = builder.Configuration["Jwt:Issuer"] ?? "LearnHub",
+            ValidAudience = builder.Configuration["Jwt:Audience"] ?? "LearnHub",
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret))
+        };
+    });
+
+builder.Services.AddAuthorization();
+
+// Event Bus
+var rabbitHost = builder.Configuration["RabbitMQ:Host"] ?? "rabbitmq";
+builder.Services.AddEventBus(rabbitHost);
+
+// Swagger
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Course API", Version = "v1" });
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        In = ParameterLocation.Header,
+        Description = "Enter JWT token",
+        Name = "Authorization",
+        Type = SecuritySchemeType.ApiKey,
+        Scheme = "Bearer"
+    });
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" }
+            },
+            Array.Empty<string>()
+        }
+    });
+});
+
+// CORS
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+        policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
+});
+
+var app = builder.Build();
+
+// Auto-migrate
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<CourseDbContext>();
+    db.Database.Migrate();
+}
+
+app.UseSwagger();
+app.UseSwaggerUI();
+app.UseCors();
+app.UseAuthentication();
+app.UseAuthorization();
+app.MapControllers();
+
+app.Run();
