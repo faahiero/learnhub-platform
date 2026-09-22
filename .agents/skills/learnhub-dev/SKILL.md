@@ -1,11 +1,11 @@
 # LearnHub Development & Testing
 
 ## Architecture
-- 5 .NET 8 microservices: Identity.API (:5001), Course.API (:5002), Enrollment.API (:5003), Media.API (:5004), ApiGateway (:5000)
+- 4 .NET 8 microservices: Identity.API (:5001), Course.API (:5002), Enrollment.API (:5003), Media.API (:5004)
+- Amazon API Gateway HTTP API v2 (emulated locally in Floci) + reverse proxy bridge (:5000 / :5005)
 - Next.js 15 frontend (:3000)
 - PostgreSQL (3 databases: learnhub_identity, learnhub_courses, learnhub_enrollments)
-- RabbitMQ (event bus)
-- LocalStack (S3 for media storage)
+- AWS S3, AWS SQS & Amazon API Gateway (emulated locally via Floci)
 
 ## Build
 ```bash
@@ -24,14 +24,14 @@ docker compose up --build
 # Rebuild a single service
 docker compose up --build <service-name>
 
-# Services: api-gateway, identity-api, course-api, enrollment-api, media-api, frontend, postgres, rabbitmq, localstack
+# Services: api-gateway, identity-api, course-api, enrollment-api, media-api, frontend, postgres, floci
 ```
 
 ## Key URLs (Docker)
 - Frontend: http://localhost:3000
 - API Gateway: http://localhost:5000
-- RabbitMQ Management: http://localhost:15672 (guest/guest)
-- LocalStack S3: http://localhost:4566
+- Floci (S3 & SQS): http://localhost:4566
+- Floci Web UI: http://localhost:4566/_floci/ui (or http://localhost:4500)
 
 ## Database Migrations
 EF Core migrations run automatically on startup via `context.Database.Migrate()` in each service's Program.cs.
@@ -55,7 +55,7 @@ The golden-path test covers the full instructor-to-student lifecycle:
 10. Verify enrollment (GET /api/enrollments/my)
 
 ## Known Configuration Notes
-- S3 URLs: Media.API uses `AWS:PublicServiceURL` (http://localhost:4566) for browser-facing URLs vs `AWS:ServiceURL` (http://localstack:4566) for SDK calls
-- EventBus: Singleton with lock-based thread safety for BasicPublish
+- S3 URLs: Media.API uses `AWS:PublicServiceURL` (http://localhost:4566) for browser-facing URLs vs `AWS:ServiceURL` (http://floci:4566) for SDK calls
+- EventBus: AWS SQS client for asynchronous event publishing and polling subscription (pointing to Floci locally)
 - CORS: Wide open for local dev (AllowAnyOrigin)
 - Frontend env: `NEXT_PUBLIC_API_URL` for browser requests, `API_URL` for SSR

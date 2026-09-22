@@ -1,14 +1,14 @@
 # LearnHub - Online Learning Platform
 
-A modern Udemy-like learning platform built with **microservices architecture** using .NET 8, Next.js, Docker, and LocalStack.
+A modern Udemy-like learning platform built with **microservices architecture** using .NET 8, Next.js, Docker, and AWS (emulated locally via Floci).
 
 ## Architecture
 
 ```
 ┌─────────────┐     ┌──────────────┐     ┌─────────────────┐
 │   Frontend   │────▶│  API Gateway │────▶│  Identity API   │
-│  (Next.js)   │     │   (Ocelot)   │     │  (Auth / JWT)   │
-│  Port: 3000  │     │  Port: 5000  │     │  Port: 5001     │
+│  (Next.js)   │     │ (AWS Floci)  │     │  (Auth / JWT)   │
+│  Port: 3000  │     │ Port: 5000   │     │  Port: 5001     │
 └─────────────┘     └──────┬───────┘     └─────────────────┘
                            │
                     ┌──────┴───────┐
@@ -22,10 +22,10 @@ A modern Udemy-like learning platform built with **microservices architecture** 
               │              PostgreSQL                     │
               │  (identity_db / courses_db / enrollments_db)│
               └────────────────────────────────────────────┘
-              ┌────────────────┐  ┌────────────────────────┐
-              │   RabbitMQ     │  │     LocalStack (S3)    │
-              │  (Event Bus)   │  │   (Media Storage)      │
-              └────────────────┘  └────────────────────────┘
+              ┌────────────────────────────────────────────┐
+              │          AWS (via Floci Emulator)          │
+              │   (API Gateway, S3 Storage, SQS Event Bus) │
+              └────────────────────────────────────────────┘
 ```
 
 ## Tech Stack
@@ -33,11 +33,10 @@ A modern Udemy-like learning platform built with **microservices architecture** 
 | Layer | Technology |
 |-------|-----------|
 | **Frontend** | Next.js 15, React, TypeScript, Tailwind CSS |
-| **API Gateway** | .NET 8, Ocelot |
+| **API Gateway** | Amazon API Gateway (HTTP API v2, emulado via Floci) + Bridge local |
 | **Microservices** | .NET 8, ASP.NET Core, Entity Framework Core |
 | **Database** | PostgreSQL 16 |
-| **Message Broker** | RabbitMQ |
-| **Cloud Services** | LocalStack (S3, SQS) |
+| **Cloud Services** | AWS (API Gateway, S3 & SQS emulados localmente via Floci) |
 | **Containerization** | Docker, Docker Compose |
 
 ## Microservices
@@ -61,12 +60,13 @@ A modern Udemy-like learning platform built with **microservices architecture** 
 
 ### Media Service (Port 5004)
 - File uploads (images, videos, documents)
-- S3 storage via LocalStack
+- AWS S3 storage (emulated locally via Floci)
 - Support for multiple file types
 
-### API Gateway (Port 5000)
-- Request routing to microservices
-- Single entry point for the frontend
+### API Gateway (Port 5000 / 5005)
+- Amazon API Gateway HTTP API v2 (emulated locally in Floci)
+- Auto-provisioned routing to microservices (`/api/auth`, `/api/courses`, `/api/enrollments`, `/api/media`)
+- Native lightweight reverse proxy bridge for localhost compatibility
 
 ## Getting Started
 
@@ -86,10 +86,10 @@ cd learnhub-platform
 docker compose up --build
 
 # Access the application
-# Frontend:    http://localhost:3000
-# API Gateway: http://localhost:5000
-# RabbitMQ:    http://localhost:15672 (guest/guest)
-# LocalStack:  http://localhost:4566
+# Frontend:                  http://localhost:3000
+# API Gateway Bridge:        http://localhost:5000 (ou 5005 no macOS com AirPlay)
+# Floci (API Gateway, S3, SQS): http://localhost:4566
+# Floci Web UI:              http://localhost:4500 (ou http://localhost:4566/_floci/ui)
 ```
 
 ### Local Development
@@ -105,7 +105,6 @@ cd src/Services/Identity/Identity.API && dotnet run
 cd src/Services/Course/Course.API && dotnet run
 cd src/Services/Enrollment/Enrollment.API && dotnet run
 cd src/Services/Media/Media.API && dotnet run
-cd src/Gateway/ApiGateway && dotnet run
 ```
 
 **Frontend (Next.js):**
@@ -162,7 +161,7 @@ learnhub-platform/
 │   ├── BuildingBlocks/
 │   │   └── Common/              # Shared library (events, extensions)
 │   ├── Gateway/
-│   │   └── ApiGateway/          # Ocelot API Gateway
+│   │   └── ApiGateway/          # AWS API Gateway Bridge (Node.js)
 │   └── Services/
 │       ├── Identity/Identity.API/  # Auth microservice
 │       ├── Course/Course.API/      # Course microservice
@@ -176,7 +175,7 @@ learnhub-platform/
 │   │   └── lib/                 # API client, types
 │   └── Dockerfile
 └── infrastructure/
-    ├── localstack/              # LocalStack init scripts
+    ├── floci/                   # Floci (S3 & SQS) init scripts
     └── postgres/                # PostgreSQL init scripts
 ```
 
@@ -186,6 +185,7 @@ The services are configured via environment variables in `docker-compose.yml`. K
 
 - `ConnectionStrings__DefaultConnection` - PostgreSQL connection string
 - `Jwt__Secret` - JWT signing key (shared across services)
-- `RabbitMQ__Host` - RabbitMQ hostname
-- `AWS__ServiceURL` - LocalStack endpoint
+- `AWS__ServiceURL` - AWS endpoint (points to Floci locally: http://floci:4566)
+- `AWS__BucketName` - S3 bucket name (default: learnhub-media)
+- `AWS__PublicServiceURL` - Publicly accessible URL for uploaded media files
 - `NEXT_PUBLIC_API_BROWSER_URL` - API Gateway URL for the frontend

@@ -6,20 +6,20 @@
 docker compose up --build -d
 ```
 
-Wait for all 9 containers to be healthy before testing.
+Wait for all 8 containers to be healthy before testing.
 
 ## Service Ports
 
 | Service | Port | URL |
 |---------|------|-----|
 | Frontend | 3000 | http://localhost:3000 |
-| API Gateway | 5000 | http://localhost:5000 |
+| API Gateway Bridge | 5000 / 5005 | http://localhost:5000 (ou 5005 se AirPlay estiver ativo) |
 | Identity API | 5001 | http://localhost:5001 |
 | Course API | 5002 | http://localhost:5002 |
 | Enrollment API | 5003 | http://localhost:5003 |
 | Media API | 5004 | http://localhost:5004 |
-| RabbitMQ UI | 15672 | http://localhost:15672 (guest/guest) |
-| LocalStack | 4566 | http://localhost:4566 |
+| Floci (API Gateway, S3 & SQS) | 4566 | http://localhost:4566 |
+| Floci Web UI | 4500 | http://localhost:4500 (ou http://localhost:4566/_floci/ui) |
 
 ## Test Account Registration
 
