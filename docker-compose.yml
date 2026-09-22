@@ -19,31 +19,39 @@ services:
       timeout: 5s
       retries: 5
 
-  rabbitmq:
-    image: rabbitmq:3-management-alpine
-    ports:
-      - "5672:5672"
-      - "15672:15672"
-    environment:
-      RABBITMQ_DEFAULT_USER: guest
-      RABBITMQ_DEFAULT_PASS: guest
-    healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  localstack:
-    image: localstack/localstack:3.0
+  floci:
+    image: floci/floci:latest-compat
     ports:
       - "4566:4566"
     environment:
-      - SERVICES=s3,sqs
-      - DEBUG=0
       - AWS_DEFAULT_REGION=us-east-1
+      - FLOCI_SERVICES_UI_ENABLED=false
     volumes:
-      - localstack_data:/var/lib/localstack
-      - ./infrastructure/localstack/init-aws.sh:/etc/localstack/init/ready.d/init-aws.sh
+      - floci_data:/var/lib/floci
+      - ./infrastructure/floci/init-floci.sh:/etc/floci/init/ready.d/init-floci.sh
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:4566/_floci/health || curl -fsS http://localhost:4566/_localstack/health || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  floci-ui:
+    image: floci/floci-ui:latest
+    ports:
+      - "4500:4500"
+    environment:
+      - FLOCI_ENDPOINT=http://floci:4566
+      - AWS_ENDPOINT_URL=http://floci:4566
+      - FLOCI_HOSTNAME=floci
+      - FLOCI_CLOUD=aws
+      - AWS_REGION=us-east-1
+      - AWS_DEFAULT_REGION=us-east-1
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - PORT=4500
+    depends_on:
+      floci:
+        condition: service_healthy
 
   # Microservices
   identity-api:
@@ -58,11 +66,11 @@ services:
       - Jwt__Secret=LearnHubSuperSecretKey2024!@#$%^&*()
       - Jwt__Issuer=LearnHub
       - Jwt__Audience=LearnHub
-      - RabbitMQ__Host=rabbitmq
+      - AWS__ServiceURL=http://floci:4566
     depends_on:
       postgres:
         condition: service_healthy
-      rabbitmq:
+      floci:
         condition: service_healthy
 
   course-api:
@@ -77,11 +85,11 @@ services:
       - Jwt__Secret=LearnHubSuperSecretKey2024!@#$%^&*()
       - Jwt__Issuer=LearnHub
       - Jwt__Audience=LearnHub
-      - RabbitMQ__Host=rabbitmq
+      - AWS__ServiceURL=http://floci:4566
     depends_on:
       postgres:
         condition: service_healthy
-      rabbitmq:
+      floci:
         condition: service_healthy
 
   enrollment-api:
@@ -96,11 +104,11 @@ services:
       - Jwt__Secret=LearnHubSuperSecretKey2024!@#$%^&*()
       - Jwt__Issuer=LearnHub
       - Jwt__Audience=LearnHub
-      - RabbitMQ__Host=rabbitmq
+      - AWS__ServiceURL=http://floci:4566
     depends_on:
       postgres:
         condition: service_healthy
-      rabbitmq:
+      floci:
         condition: service_healthy
 
   media-api:
@@ -111,16 +119,14 @@ services:
       - "5004:80"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - AWS__ServiceURL=http://localstack:4566
+      - AWS__ServiceURL=http://floci:4566
+      - AWS__PublicServiceURL=http://localhost:4566
       - AWS__BucketName=learnhub-media
       - Jwt__Secret=LearnHubSuperSecretKey2024!@#$%^&*()
       - Jwt__Issuer=LearnHub
       - Jwt__Audience=LearnHub
-      - RabbitMQ__Host=rabbitmq
     depends_on:
-      localstack:
-        condition: service_started
-      rabbitmq:
+      floci:
         condition: service_healthy
 
   api-gateway:
@@ -129,11 +135,18 @@ services:
       dockerfile: src/Gateway/ApiGateway/Dockerfile
     ports:
       - "5000:80"
+      - "5005:80"
     depends_on:
-      - identity-api
-      - course-api
-      - enrollment-api
-      - media-api
+      floci:
+        condition: service_healthy
+      identity-api:
+        condition: service_started
+      course-api:
+        condition: service_started
+      enrollment-api:
+        condition: service_started
+      media-api:
+        condition: service_started
 
   # Frontend
   frontend:
@@ -143,11 +156,13 @@ services:
     ports:
       - "3000:3000"
     environment:
+      - API_GATEWAY_URL=http://api-gateway:80
+      - FLOCI_URL=http://floci:4566
       - NEXT_PUBLIC_API_URL=http://api-gateway:80
-      - NEXT_PUBLIC_API_BROWSER_URL=http://localhost:5000
+      - NEXT_PUBLIC_API_BROWSER_URL=
     depends_on:
       - api-gateway
 
 volumes:
   postgres_data:
-  localstack_data:
+  floci_data:

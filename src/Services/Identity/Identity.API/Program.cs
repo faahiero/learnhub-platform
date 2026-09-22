@@ -35,9 +35,10 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddAuthorization();
 builder.Services.AddScoped<ITokenService, TokenService>();
 
-// Event Bus
-var rabbitHost = builder.Configuration["RabbitMQ:Host"] ?? "rabbitmq";
-builder.Services.AddEventBus(rabbitHost);
+// Event Bus (AWS SQS)
+var awsServiceUrl = builder.Configuration["AWS:ServiceURL"];
+var awsRegion = builder.Configuration["AWS:Region"] ?? "us-east-1";
+builder.Services.AddEventBus(awsServiceUrl, awsRegion);
 
 // Swagger
 builder.Services.AddControllers();

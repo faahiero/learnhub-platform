@@ -8,17 +8,25 @@ using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// AWS S3 (LocalStack)
-var awsServiceUrl = builder.Configuration["AWS:ServiceURL"] ?? "http://localstack:4566";
+// AWS S3 Storage Service
+var awsServiceUrl = builder.Configuration["AWS:ServiceURL"];
+var awsRegion = builder.Configuration["AWS:Region"] ?? "us-east-1";
+
 builder.Services.AddSingleton<IAmazonS3>(sp =>
 {
-    var config = new AmazonS3Config
+    if (!string.IsNullOrEmpty(awsServiceUrl))
     {
-        ServiceURL = awsServiceUrl,
-        ForcePathStyle = true,
-        UseHttp = true
-    };
-    return new AmazonS3Client("test", "test", config);
+        var config = new AmazonS3Config
+        {
+            ServiceURL = awsServiceUrl,
+            ForcePathStyle = true,
+            UseHttp = true,
+            AuthenticationRegion = awsRegion
+        };
+        return new AmazonS3Client("test", "test", config);
+    }
+
+    return new AmazonS3Client(Amazon.RegionEndpoint.GetBySystemName(awsRegion));
 });
 
 builder.Services.AddSingleton<IStorageService, S3StorageService>();
@@ -42,9 +50,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 
-// Event Bus
-var rabbitHost = builder.Configuration["RabbitMQ:Host"] ?? "rabbitmq";
-builder.Services.AddEventBus(rabbitHost);
+// Event Bus (AWS SQS)
+builder.Services.AddEventBus(awsServiceUrl, awsRegion);
 
 // Swagger
 builder.Services.AddControllers();

@@ -33,6 +33,7 @@ Thumbs.db
 # Docker
 docker-compose.override.yml
 
-# LocalStack
+# Floci
 .localstack/
+.floci/
 volume/
