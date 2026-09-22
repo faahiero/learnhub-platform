@@ -39,6 +39,26 @@ A modern Udemy-like learning platform built with **microservices architecture** 
 | **Cloud Services** | AWS (API Gateway, S3 & SQS emulados localmente via Floci) |
 | **Containerization** | Docker, Docker Compose |
 
+## Platform Features
+
+### Role-Based Experience
+- **Instructors (`Instructor`):**
+  - Dedicated **Instructor Dashboard** (`/instructor`) for managing all authored courses.
+  - Complete curriculum authoring: create sections, add text/video lessons, set pricing and categories.
+  - **Direct video upload** to AWS S3 with an interactive preview player inside the course editor.
+  - **Author Privileges:** Instant full access to course lessons and videos without needing to enroll or purchase.
+  - Quick action buttons ("Gerenciar / Editar Conteúdo") directly on course detail pages.
+- **Students (`Student`):**
+  - Course exploration and discovery by keyword, category, and skill level.
+  - Free preview lessons for unauthenticated or non-enrolled users.
+  - **Interactive Learning Player:** Built-in HTML5 video player supporting byte-range streaming (`206 Partial Content`).
+  - **Progress Tracking:** Toggle lessons as completed ("Marcar como Concluída") with instant progress bar updates.
+  - **My Learning Dashboard** (`/dashboard`): Track enrolled courses and completion metrics.
+
+### Media & Video Streaming
+- **AWS S3 Integration:** Media storage configured via Floci with permissive CORS rules for browser streaming.
+- **Next.js Media Proxy:** Transparent `/learnhub-media/:path*` rewrite route ensuring seamless CORS and local port routing.
+
 ## Microservices
 
 ### Identity Service (Port 5001)
@@ -55,13 +75,13 @@ A modern Udemy-like learning platform built with **microservices architecture** 
 
 ### Enrollment Service (Port 5003)
 - Student enrollment
-- Progress tracking
+- Progress tracking with per-lesson status
 - Course reviews and ratings
 
 ### Media Service (Port 5004)
-- File uploads (images, videos, documents)
+- Direct file uploads (video, audio, images, documents)
 - AWS S3 storage (emulated locally via Floci)
-- Support for multiple file types
+- Media metadata and public URL resolution
 
 ### API Gateway (Port 5000 / 5005)
 - Amazon API Gateway HTTP API v2 (emulated locally in Floci)
@@ -96,6 +116,9 @@ docker compose up --build
 
 **Backend (.NET):**
 ```bash
+# Start prerequisite infrastructure (PostgreSQL & Floci):
+docker compose up -d postgres floci
+
 # Restore and build
 dotnet restore
 dotnet build
