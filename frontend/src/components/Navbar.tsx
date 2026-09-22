@@ -18,13 +18,17 @@ export default function Navbar() {
               <GraduationCap className="h-8 w-8" />
               LearnHub
             </Link>
-            <div className="hidden md:flex ml-10 space-x-4">
+            <div className="hidden md:flex ml-10 space-x-3 items-center">
               <Link href="/courses" className="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">
-                Explore Courses
+                Explorar Cursos
               </Link>
               {user?.role === 'Instructor' && (
-                <Link href="/instructor" className="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">
-                  Instructor Dashboard
+                <Link
+                  href="/instructor"
+                  className="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5"
+                >
+                  <GraduationCap className="h-4 w-4" />
+                  Painel do Instrutor
                 </Link>
               )}
             </div>
@@ -33,20 +37,27 @@ export default function Navbar() {
           <div className="hidden md:flex items-center space-x-4">
             {user ? (
               <>
-                <Link href="/dashboard" className="flex items-center gap-1 text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">
+                <Link href="/dashboard" className="flex items-center gap-1.5 text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">
                   <LayoutDashboard className="h-4 w-4" />
-                  My Learning
+                  Meus Cursos
                 </Link>
-                <div className="flex items-center gap-2 text-gray-700 text-sm">
-                  <User className="h-4 w-4" />
-                  {user.fullName}
+                <div className="flex items-center gap-2 pl-2 border-l border-gray-200">
+                  <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 font-bold flex items-center justify-center text-xs">
+                    {user.fullName.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-xs font-semibold text-gray-900 leading-tight">{user.fullName}</span>
+                    <span className="text-[10px] text-indigo-600 font-medium capitalize">
+                      {user.role === 'Instructor' ? 'Instrutor' : 'Aluno'}
+                    </span>
+                  </div>
                 </div>
                 <button
                   onClick={logout}
-                  className="flex items-center gap-1 text-gray-600 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                  className="flex items-center gap-1 text-gray-500 hover:text-red-600 px-2 py-1.5 rounded-md text-sm font-medium transition-colors ml-2"
                 >
                   <LogOut className="h-4 w-4" />
-                  Logout
+                  Sair
                 </button>
               </>
             ) : (
@@ -73,20 +84,20 @@ export default function Navbar() {
         <div className="md:hidden bg-white border-t">
           <div className="px-4 py-3 space-y-2">
             <Link href="/courses" className="block text-gray-600 hover:text-indigo-600 py-2" onClick={() => setMobileOpen(false)}>
-              Explore Courses
+              Explorar Cursos
             </Link>
             {user ? (
               <>
                 <Link href="/dashboard" className="block text-gray-600 hover:text-indigo-600 py-2" onClick={() => setMobileOpen(false)}>
-                  My Learning
+                  Meus Cursos
                 </Link>
                 {user.role === 'Instructor' && (
-                  <Link href="/instructor" className="block text-gray-600 hover:text-indigo-600 py-2" onClick={() => setMobileOpen(false)}>
-                    Instructor Dashboard
+                  <Link href="/instructor" className="block text-indigo-600 font-medium py-2" onClick={() => setMobileOpen(false)}>
+                    Painel do Instrutor
                   </Link>
                 )}
-                <button onClick={() => { logout(); setMobileOpen(false); }} className="block text-red-600 py-2">
-                  Logout
+                <button onClick={() => { logout(); setMobileOpen(false); }} className="block text-red-600 py-2 w-full text-left">
+                  Sair
                 </button>
               </>
             ) : (

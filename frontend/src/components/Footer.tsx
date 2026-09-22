@@ -15,7 +15,7 @@ export default function Footer() {
             </div>
             <p className="text-gray-400 text-sm max-w-md">
               A modern learning platform built with microservices architecture.
-              Powered by .NET, Next.js, Docker, and LocalStack.
+              Powered by .NET, Next.js, Docker, and AWS (via Floci).
             </p>
           </div>
 
@@ -33,8 +33,8 @@ export default function Footer() {
             <ul className="space-y-2 text-sm">
               <li className="text-gray-400">.NET 8 Microservices</li>
               <li className="text-gray-400">Next.js + React</li>
-              <li className="text-gray-400">Docker + LocalStack</li>
-              <li className="text-gray-400">PostgreSQL + RabbitMQ</li>
+              <li className="text-gray-400">Docker + AWS (via Floci)</li>
+              <li className="text-gray-400">PostgreSQL + AWS SQS</li>
             </ul>
           </div>
         </div>

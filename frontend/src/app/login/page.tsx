@@ -24,8 +24,8 @@ export default function LoginPage() {
       login(res.data.token, res.data.user);
       router.push('/dashboard');
     } catch (err: unknown) {
-      const error = err as { response?: { data?: { message?: string } } };
-      setError(error.response?.data?.message || 'Invalid email or password');
+      const error = err as { response?: { data?: { message?: string } }; message?: string };
+      setError(error.response?.data?.message || error.message || 'Invalid email or password');
     } finally {
       setLoading(false);
     }

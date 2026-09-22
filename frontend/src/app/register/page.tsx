@@ -26,8 +26,9 @@ export default function RegisterPage() {
       login(res.data.token, res.data.user);
       router.push(role === 'Instructor' ? '/instructor' : '/dashboard');
     } catch (err: unknown) {
-      const error = err as { response?: { data?: { message?: string } } };
-      setError(error.response?.data?.message || 'Registration failed');
+      const error = err as { response?: { data?: { message?: string; errors?: Record<string, string[]> } }; message?: string };
+      const apiErrors = error.response?.data?.errors ? Object.values(error.response.data.errors).flat().join('. ') : null;
+      setError(error.response?.data?.message || apiErrors || error.message || 'Registration failed');
     } finally {
       setLoading(false);
     }
